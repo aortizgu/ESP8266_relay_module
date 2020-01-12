@@ -8,12 +8,15 @@
 #define STAPSK  ""
 #endif
 
+#define HTTP_PORT 80
+#define HOSTNAME "esp8266"
+
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
 const char* page = "<html>Turn <a href=\"/led/on\">ON LED</a><br>Turn <a href=\"/led/off\">OFF LED</a><br>Turn <a href=\"/relay/on\">ON RELAY</a><br>Turn <a href=\"/relay/off\">OFF RELAY</a><br></html>";
 
-ESP8266WebServer server(80);
+ESP8266WebServer server(HTTP_PORT);
 
 const int led = 2;
 const int relay = 0;
@@ -23,7 +26,6 @@ void handleRoot() {
 }
 
 void handleNotFound() {
-  digitalWrite(led, 1);
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -36,7 +38,6 @@ void handleNotFound() {
     message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
   }
   server.send(404, "text/html", message);
-  digitalWrite(led, 0);
 }
 
 void setup(void) {
@@ -60,9 +61,10 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (MDNS.begin("esp8266")) {
+  if (MDNS.begin(HOSTNAME)) {
     Serial.println("MDNS responder started");
   }
+  MDNS.addService("http", "tcp", HTTP_PORT);
 
   server.on("/", handleRoot);
 
